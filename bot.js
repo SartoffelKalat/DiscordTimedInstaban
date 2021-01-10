@@ -22,7 +22,7 @@ client.on("message", async function (message) {
         let key = params[0]
         if(KEYS.indexOf(key)> -1) {
           let value = Number(params[1])
-          if(value && !isNaN(params[1])) {
+          if(value !== undefined && !isNaN(params[1])) {
             value = Math.round(value)
             db.setConfig(guildId, key, value)
             message.channel.send("Minimum required " +  key + " is now set to " + value)
@@ -33,10 +33,17 @@ client.on("message", async function (message) {
         } else if (key === "help"){
             text = "**Usage: **\n" +
             "    `.atbm (days | hours | minutes) value`\n        Sets the minimum account age requirement.\n        Eg. `.atbm days 1`\n" +
+            "    `.config`\n        Shows an overview of all set values.\n\n" +
             "    `.help`\n        Opens this help window.\n\n" +
             "**Note**: the individual time values are summed up. Eg. hours=24, days=1 results in a 2 days minimum account age requirement." 
             message.channel.send(text)
-        } 
+        } else if (key === "config"){
+          let text = "**Configured Values: **\n"
+          for(let k of Object.keys(config)) {
+            text+="    " + k + ": " + config[k] + "\n"
+          }
+          message.channel.send(text)
+      } 
         else {
           message.channel.send("Invalid key: " +  key + "\nThe following keys are configurable: " + KEYS.toString())
         }
@@ -62,4 +69,4 @@ client.on("guildMemberAdd", (member) => {
         
     }
 });
-client.login("--enter-key-here--")
+client.login("--insert-secret-here--")
