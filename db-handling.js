@@ -7,8 +7,30 @@ const default_settings = require("./default-config.json");
 
 module.exports = class DbHandler {
     constructor(){
-        db.defaults( {})
+        db.defaults( {blacklist: []})
             .write();
+    }
+    isUserInBlackList = function(userId) {
+        return !!(db.get('blacklist')
+            .find({ id: userId })
+            .value())  
+    }
+    getBlackList = function(userId) {
+        return db.get('blacklist')
+            .map('id')
+            .value()
+    }
+    addToBlackList = function(userId) {
+        if(!this.isUserInBlackList(userId)) {
+            db.get('blacklist')
+                .push({ id: userId})
+                .write()
+        }
+    }
+    removeFromBlackList = function(userId) {
+        db.get('blacklist')
+            .remove({ id: userId })
+            .write()
     }
     getConfig = function(id){
         return db.get(id)
@@ -19,7 +41,7 @@ module.exports = class DbHandler {
             .write();
     }
     setDefaultConfigs = function(id){
-        db.set(id, default_settings)
+        db.set(id, JSON.parse(JSON.stringify(default_settings)))
             .write();
     }
 }

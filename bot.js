@@ -33,8 +33,12 @@ client.on("message", async function (message) {
         } else if (key === "help"){
             text = "**Usage: **\n" +
             "    `.atbm (days | hours | minutes) value`\n        Sets the minimum account age requirement.\n        Eg. `.atbm days 1`\n" +
-            "    `.config`\n        Shows an overview of all set values.\n\n" +
-            "    `.help`\n        Opens this help window.\n\n" +
+            "    `.atbm unban clientId`\n        Removes specified client ID from blacklist.\n" +
+            "    `.atbm ban clientId`\n        Adds specified client ID to blacklist.\n" +
+            "    `.atbm blacklist`\n        Displays all banned client IDs.\n" +
+            "    `.atbm useBlacklist (true | false)`\n        Enable or disable usage of the blacklist.\n" +
+            "    `.atbm config`\n        Shows an overview of all set values.\n" +
+            "    `.atbm help`\n        Opens this help window.\n\n" +
             "**Note**: the individual time values are summed up. Eg. hours=24, days=1 results in a 2 days minimum account age requirement." 
             message.channel.send(text)
         } else if (key === "config"){
@@ -43,14 +47,32 @@ client.on("message", async function (message) {
             text+="    " + k + ": " + config[k] + "\n"
           }
           message.channel.send(text)
-      } 
+          
+        } else if (key === "ban"){
+          let value = params[1]
+          db.addToBlackList(value);
+          message.channel.send("Added " +  value + " from blacklist ")
+        }else if (key === "unban"){
+          let value = params[1]
+          db.removeFromBlackList(value);
+          message.channel.send("Removed " +  value + " from blacklist ")
+        } else if (key === "useBlacklist"){
+          let value = params[1] == 'true'
+          db.setConfig(guildId, key, value)
+          message.channel.send("Set " +  key + " to " + value)
+        } else if (key === "blacklist"){
+          let list = db.getBlackList()
+          let text = "**Blacklist**:\n    " + list.join("\n    ")
+          message.channel.send(text)
+        }
         else {
-          message.channel.send("Invalid key: " +  key + "\nThe following keys are configurable: " + KEYS.toString())
+          message.channel.send("Invalid key: " +  key + ". call ´.atbm help´ for further help.")
         }
       }
     }
   })
 client.on("guildMemberAdd", (member) => {
+    let clientId = member.user.id
     let currentTime = Date.now()
     let dt = new Date();
     let guildId = member.guild.id
@@ -63,10 +85,16 @@ client.on("guildMemberAdd", (member) => {
     dt.setHours(dt.getHours() - config.hours)
     dt.setDate( dt.getDate() - config.days);
     if (currentTime - member.user.createdAt <= currentTime- dt) {
+        if(config.useBlacklist){
+          db.addToBlackList(clientId)
+        }
         member.ban({ days: 7})
         .then(() => {console.log("Banned user:", member.user.username, "(id:", member.user.id+") from guild",  member.guild.name, "(id:", guildId + ") since his account is less than", config.hours, "hour(s),", config.days, "day(s) and", config.minutes,"minute(s) old")})
         .catch(console.error);
-        
+    } else if (config.useBlacklist && db.isUserInBlackList(clientId)){
+      member.ban({ days: 7})
+        .then(() => {console.log("Banned user:", member.user.username, "(id:", member.user.id+") from guild",  member.guild.name, "(id:", guildId + ") since his account is already blacklisted")})
+        .catch(console.error);
     }
 });
 client.login("--insert-secret-here--")
