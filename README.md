@@ -1,5 +1,5 @@
 # DiscordTimedInstaban
-A Node-based Discord bot that bans accounts when joining a server based on account age.  
+A Node-based Discord bot that bans accounts when joining a server based on account age to protect the server from raids and general harassment.  
 The bot also keeps track of banned users through a blacklist. Individual server configurations and blacklisted accounts are stored in a local JSON database using [lowdb](https://github.com/typicode/lowdb).  
 
 ## Usage
